@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance Invoice</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 10px; margin: 20px; }
+    .invoice-container { width: 700px; margin: 0 auto; border: 2px solid #000; padding: 10px; }
+    .header { text-align: center; margin-bottom: 10px; }
+    .header h2 { margin:5px 0; font-size:16px; }
+    .header p { margin:2px 0; font-size:12px; }
+    table { width:100%; border-collapse: collapse; }
+    td,th { border:1px solid #000; padding:5px; text-align:left; }
+    .center{text-align:center;} .right{text-align:right;} .bold{font-weight:bold;}
+    .charges-table{margin:10px 0;} 
+    .charges-table th{background-color:#f0f0f0;font-weight:bold;text-align:center;}
+    .payment-table{margin-top:10px;}
+    .notes{margin-top:10px;font-size:11px;} .notes li{margin:3px 0;}
+    .signature-section{height:100px;vertical-align:bottom;text-align:center;}
+    .signature-section img { max-width: 100%; max-height: 80px; object-fit: contain; }
+   
+    /* Config toggle */
+    .config-toggle {text-align:center;margin-bottom:10px;}
+    .btn-toggle {background:#6c757d;color:#fff;border:none;padding:6px 12px;font-size:12px;
+    cursor:pointer;border-radius:5px;}
+    .btn-toggle:hover{background:#5c636a;}
+   
+    /* Config panel */
+    .config-container {max-height: 0;max-width:700px;margin:0 auto 20px;padding:15px;border:2px solid #0d6efd;background:#f9f9f9;opacity: 0;overflow: hidden;transition: max-height 0.4s ease, opacity 0.3s ease;}
+    .config-container.open {max-height: 1000px; /* large enough for content */opacity: 1;}
+    .config-container h3{margin-top:0;}
+    .config-container label{display:block;margin:6px 0 2px;font-size:12px;}
+    .config-container input,.config-container textarea{width:100%;padding:4px;font-size:12px;margin-bottom:8px;border:1px solid #aaa;}
+    /* .btn-save{background:#198754;color:#fff;border:none;padding:8px 12px;cursor:pointer;border-radius:5px;font-size:12px;}
+    .btn-save:hover{background:#157347;} */
+   @media print {
+    .no-print, 
+    .no-print *, 
+    .btn-print, 
+    .btn-toggle {display: none !important;visibility: hidden !important;}
+    }
+    .bottom-controls {width: 700px; margin: 20px auto 10px; display: flex; justify-content: center; gap: 10px;}
+    .btn-print {background-color:#0d6efd; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-size:14px;}
+    .btn-print:hover { background-color:#0b5ed7; }
+    .btn-toggle {background:#6c757d; color:#fff; border:none; padding:10px 20px; font-size:14px; cursor:pointer; border-radius:5px;}
+    .btn-toggle:hover { background:#5c636a; }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <!-- Header Section -->
+    <div class="header">
+      <h2 id="societyName">SOCIETY</h2>
+      <p id="societyAddress">Address: </p>
+      <p id="societyRegNo">Registration No : </p>
+      <p id="societyPAN">PAN Number: </p>
+    </div>
+
+    <!-- Name and Invoice Info -->
+    <table class="info-table">
+      <tr>
+        <td width="15%"><strong>Name:</strong></td>
+        <td width="35%" id="ownerName"></td>
+        <td width="25%"><strong>Invoice No:</strong></td>
+        <td width="25%" id="invoiceNo"></td>
+      </tr>
+      <tr>
+        <td><strong>Flat No.:</strong></td>
+        <td id="flatNo"></td>
+        <td><strong>Date:</strong></td>
+        <td id="receiptDate"></td>
+      </tr>
+      <tr>
+        <td></td><td></td>
+        <td><strong>Months:</strong></td>
+        <td id="monthsCovered"></td>
+      </tr>
+    </table>
+
+    <!-- Maintenance Charges Section -->
+    <table class="charges-table">
+      <tr><th colspan="3" class="center">Maintenance Charges</th></tr>
+      <tr><th colspan="3" class="center" id="periodHeader">PERIOD: </th></tr>
+      <tr><th class="center">Sr. No.</th><th class="center">Description</th><th class="center">Amount</th></tr>
+      <tr><td class="center">1</td><td>Periodic Building Maintenance</td><td class="right" id="pbm">0.00</td></tr>
+      <tr><td class="center">2</td><td>Repair & Maintenance Fund</td><td class="right" id="rmf">0.00</td></tr>
+      <tr><td class="center">3</td><td>Sinking Funds</td><td class="right" id="sinking">0.00</td></tr>
+      <tr><td class="center">4</td><td>Parking</td><td class="right" id="parking">0.00</td></tr>
+      <tr><td class="center">5</td><td>Penalty/Interest</td><td class="right" id="penalty">0.00</td></tr>
+      <tr><td class="center">6</td><td>Lease Rent</td><td class="right" id="leaseRent">0.00</td></tr>
+      <tr><td class="center">7</td><td>Previous Balance</td><td class="right" id="balance">0.00</td></tr>
+      <tr><td colspan="3"></td></tr>
+      <tr><td colspan="2" class="bold">GRAND TOTAL</td><td class="right bold" id="grandTotal">0.00</td></tr>
+    </table>
+
+    <!-- Amount in Words -->
+    <table>
+      <tr><td width="25%"><strong>Amount in Words:</strong></td>
+      <td width="75%" id="amountInWords"></td></tr>
+    </table>
+
+    <!-- Payment Details Section -->
+    <table class="payment-table">
+      <tr>
+        <th width="15%" class="center">Sr. No.</th>
+        <th colspan="2" class="center">Payment Details</th>
+        <!-- Signature in Receipt Panel -->
+        <th width="25%" rowspan="5" class="signature-section">
+          <br><br>
+          <img id="signatureImg" alt="Signature">
+          <br>Signature<br>(Secretary / Chairman / Treasurer)
+        </th>
+      </tr>
+      <tr><td class="center">1</td><td colspan="2" id="paymentDetail1"></td></tr>
+      <tr><td class="center">2</td><td colspan="2" id="paymentDetail2"></td></tr>
+      <tr><td class="center">3</td><td colspan="2" id="paymentDetail3"></td></tr>
+      <tr><td class="center">4</td><td colspan="2" id="paymentDetail4"></td></tr>
+    </table>
+
+    <!-- Notes Section -->
+    <table>
+      <tr><td class="bold">Note:</td></tr>
+      <tr>
+        <td>
+          <ol class="notes"> 
+            <li id="note1"></li>
+            <li id="note2"></li>
+            <li id="note3"></li>
+          </ol>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls no-print">
+    <button class="btn-print" onclick="window.print()"> Print Receipt</button>
+    <button class="btn-toggle" onclick="toggleConfig()">⚙ Configure Settings</button>
+    </div>
+
+    <!-- Config Panel (slides down below buttons) -->
+    <div class="config-container no-print" id="configPanel">
+    <h3>Configure Receipt Settings</h3>
+
+    <label>Society Name:</label>
+    <input type="text" id="cfgSociety">
+
+    <label>Address:</label>
+    <input type="text" id="cfgAddress">
+
+    <label>Registration No:</label>
+    <input type="text" id="cfgRegNo">
+
+    <label>PAN Number:</label>
+    <input type="text" id="cfgPAN">
+
+    <label>Note 1:</label>
+    <input type="text" id="cfgNote1">
+
+    <label>Note 2:</label>
+    <input type="text" id="cfgNote2">
+
+    <label>Note 3:</label>
+    <input type="text" id="cfgNote3">
+
+    <label>Upload Signature (PNG/JPG ≤ 150 KB):</label>
+    <input type="file" id="cfgSignature" accept="image/*">
+    <button type="button" class="btn-remove" onclick="removeSignature()">Remove Signature</button>
+
+    <button class="btn-save" onclick="saveConfig()">Save Config</button>
+    </div>
+        
+    
+
+  <script>
+  // Toggle config panel
+  function toggleConfig() {
+    const panel = document.getElementById('configPanel');
+    panel.classList.toggle('open');
+    } 
+
+  // Load config
+  function loadConfig() {
+    const cfg = JSON.parse(localStorage.getItem('receiptConfig')) || {};
+    document.getElementById('cfgSociety').value = cfg.society||'';
+    document.getElementById('cfgAddress').value = cfg.address||'';
+    document.getElementById('cfgRegNo').value = cfg.regno||'';
+    document.getElementById('cfgPAN').value = cfg.pan||'';
+    document.getElementById('cfgNote1').value = cfg.note1||'';
+    document.getElementById('cfgNote2').value = cfg.note2||'';
+    document.getElementById('cfgNote3').value = cfg.note3||'';
+    if(cfg.signature) document.getElementById('signatureImg').src = cfg.signature;
+    applyConfig(cfg);
+  }
+
+  // Save config
+  function saveConfig() {
+    const fileInput = document.getElementById('cfgSignature');
+    const cfg = {
+      society: document.getElementById('cfgSociety').value,
+      address: document.getElementById('cfgAddress').value,
+      regno: document.getElementById('cfgRegNo').value,
+      pan: document.getElementById('cfgPAN').value,
+      note1: document.getElementById('cfgNote1').value,
+      note2: document.getElementById('cfgNote2').value,
+      note3: document.getElementById('cfgNote3').value
+    };
+    // Handle image
+    if(fileInput.files.length>0) {
+      const file=fileInput.files[0];
+      if(file.size>150*1024) { alert("File too large!"); return; }
+      const reader=new FileReader();
+      reader.onload=function(e){
+        cfg.signature=e.target.result;
+        localStorage.setItem('receiptConfig',JSON.stringify(cfg));
+        applyConfig(cfg);
+        alert("Config saved!");
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const existing = JSON.parse(localStorage.getItem('receiptConfig'))||{};
+      if(existing.signature) cfg.signature=existing.signature;
+      localStorage.setItem('receiptConfig',JSON.stringify(cfg));
+      applyConfig(cfg);
+      alert("Config saved!");
+    }
+  }
+
+  function applyConfig(cfg){
+    document.getElementById('societyName').textContent = cfg.society || 'SOCIETY';
+    document.getElementById('societyAddress').textContent = 'Address: ' + (cfg.address || '');
+    document.getElementById('societyRegNo').textContent = 'Registration No: ' + (cfg.regno || '');
+    document.getElementById('societyPAN').textContent = 'PAN Number: ' + (cfg.pan || '');
+    document.getElementById('note1').textContent = cfg.note1 || 'Cheque should be drawn in favor of society only.';
+    document.getElementById('note2').textContent = cfg.note2 || 'Cheque Subject to Realisation.';
+    document.getElementById('note3').textContent = cfg.note3 || 'Interest @ 10% of defaulted amount will be charged for delayed payments.';
+
+    if(cfg.signature) document.getElementById('signatureImg').src = cfg.signature;
+    }
+
+    // Remove signature from config
+    function removeSignature() {
+    const cfg = JSON.parse(localStorage.getItem('receiptConfig')) || {};
+    delete cfg.signature; // remove the saved signature
+    localStorage.setItem('receiptConfig', JSON.stringify(cfg)); 
+    document.getElementById('cfgSignature').value = ""; // clear file input
+    document.getElementById('signatureImg').src = "";   // remove image from receipt
+    alert("Signature removed!");
+    }
+
+    // === Receipt Data Handling (unchanged) ===
+    function numberToWords(num) {
+      const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine'];
+      const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+      const teens=['Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+      if(num===0) return 'Zero';
+      function convertHundreds(n){
+        let res='';
+        if(n>=100){res=ones[Math.floor(n/100)]+' Hundred ';n%=100;}
+        if(n>=20){res+=tens[Math.floor(n/10)]+' ';n%=10;}
+        else if(n>=10){res+=teens[n-10]+' ';n=0;}
+        if(n>0) res+=ones[n]+' ';
+        return res.trim();
+      }
+      if(num<1000) return convertHundreds(num);
+      let res='';let crore=Math.floor(num/10000000);num%=10000000;
+      let lakh=Math.floor(num/100000);num%=100000;
+      let thousand=Math.floor(num/1000);num%=1000;
+      if(crore>0)res+=convertHundreds(crore)+' Crore ';
+      if(lakh>0)res+=convertHundreds(lakh)+' Lakh ';
+      if(thousand>0)res+=convertHundreds(thousand)+' Thousand ';
+      if(num>0)res+=convertHundreds(num);
+      return res.trim();
+    }
+    function formatCurrency(amount){return parseFloat(amount).toFixed(2);}
+    function formatDate(dateString){const d=new Date(dateString);return d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');}
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadConfig(); 
+      const receiptData = JSON.parse(sessionStorage.getItem('receiptData'));
+      if(!receiptData) return;
+      document.getElementById('ownerName').textContent = receiptData.owners;
+      document.getElementById('invoiceNo').textContent = receiptData.id;
+      document.getElementById('flatNo').textContent = receiptData.room_no;
+      document.getElementById('receiptDate').textContent = formatDate(receiptData.date_made);
+      document.getElementById('monthsCovered').textContent = receiptData.months;
+      document.getElementById('periodHeader').textContent = 'PERIOD: ' + receiptData.period;
+      document.getElementById('pbm').textContent = formatCurrency(receiptData.periodic_building_maintenance);
+      document.getElementById('rmf').textContent = formatCurrency(receiptData.repair_and_maintenance_fund);
+      document.getElementById('sinking').textContent = formatCurrency(receiptData.sinking_funds);
+      document.getElementById('parking').textContent = formatCurrency(receiptData.parking);
+      document.getElementById('penalty').textContent = formatCurrency(receiptData.penalty);
+      document.getElementById('leaseRent').textContent = formatCurrency(receiptData.lease_rent);
+      document.getElementById('balance').textContent = formatCurrency(receiptData.balance);
+      document.getElementById('grandTotal').textContent = formatCurrency(receiptData.total_maintenance_amount);
+      const totalAmount = Math.round(parseFloat(receiptData.payment_amount));
+      document.getElementById('amountInWords').textContent = numberToWords(totalAmount)+' Rupees Only';
+      document.getElementById('paymentDetail1').textContent = `Payment Mode: ${receiptData.payment_mode}`;
+      document.getElementById('paymentDetail2').textContent = `Payment Date: ${formatDate(receiptData.payment_date)}`;
+      if(receiptData.payment_mode==='CHEQUE'){
+        document.getElementById('paymentDetail3').textContent = `Cheque No: ${receiptData.cheque_num}`;
+        document.getElementById('paymentDetail4').textContent = `Cheque Draw Date: ${formatDate(receiptData.cheque_draw_date)}`;
+      }
+      sessionStorage.removeItem('receiptData');
+    });
+  </script>
+</body>
+</html>

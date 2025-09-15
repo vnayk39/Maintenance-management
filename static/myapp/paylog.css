@@ -1,0 +1,240 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+}
+.container {
+    max-width: 1500px;
+    margin-top: 10px;
+    /* background-color: #ffffff; */
+    /* border-radius: 12px; */
+    /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+    padding: 30px;
+}
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    transition: background-color 0.3s ease;
+    border-radius: 8px;
+    padding: 10px 15px; /* Adjusted padding for icon-only buttons */
+}
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    border-radius: 8px;
+    padding: 10px 15px; /* Adjusted padding for icon-only buttons */
+}
+.btn-danger {
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
+.log-table-container {
+    max-height: 600px; /* Allow more height for multiple rows */
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: auto; /* Added for horizontal scrolling if table exceeds container */
+    border: 1px solid #a0a0a0; /* Subtle border for the whole table container */
+    border-radius: 0; /* Remove rounded corners for Excel-like feel */
+}
+.log-table {
+    margin-bottom: 0;
+    border-collapse: collapse; /* Use collapse for true Excel-like borders */
+    width: 100%;
+    table-layout: fixed; /* Crucial: Forces browser to respect column widths */
+    background-color: #fff; /* Explicitly set table background to white */
+}
+.log-table th, .log-table td {
+    vertical-align: middle;
+    padding: 0.2rem 0.75rem; /* Consistent vertical padding for both th and td */
+    border: 1px solid #d0d0d0; /* All cells have borders */
+    word-wrap: break-word; /* Allows long words to break and wrap */
+    height: 30px; /* Fixed height for consistency, like editor */
+}
+/* Specific column widths for the payment log table */
+.log-table th:nth-child(1), .log-table td:nth-child(1) { /* Room No */
+    width: 90px;
+    min-width: 90px;
+}
+.log-table th:nth-child(2), .log-table td:nth-child(2) { /* Owners */
+    width: 200px;
+    min-width: 180px;
+}
+.log-table th:nth-child(3), .log-table td:nth-child(3) { /* Date Made */
+    width: 110px;
+    min-width: 100px;
+}
+.log-table th:nth-child(4), .log-table td:nth-child(4) { /* Months Covered */
+    width: 100px;
+    min-width: 90px;
+}
+.log-table th:nth-child(5), .log-table td:nth-child(5) { /* Period Covered */
+    width: 140px;
+    min-width: 120px;
+}
+.log-table th:nth-child(6), .log-table td:nth-child(6) { /* Space */
+    width: 90px;
+    min-width: 90px;
+}
+.log-table th:nth-child(7), .log-table td:nth-child(7), /* PBM */
+.log-table th:nth-child(8), .log-table td:nth-child(8), /* RMF */
+.log-table th:nth-child(9), .log-table td:nth-child(9), /* Sinking Funds */
+.log-table th:nth-child(10), .log-table td:nth-child(10), /* Parking */
+.log-table th:nth-child(11), .log-table td:nth-child(11), /* Penalty */
+.log-table th:nth-child(12), .log-table td:nth-child(12), /* Lease Rent */
+.log-table th:nth-child(13), .log-table td:nth-child(13), /* Balance */
+.log-table th:nth-child(14), .log-table td:nth-child(14) { /* Additional Charge 1 */
+    width: 110px;
+    min-width: 100px;
+    text-align: right; /* Align numeric values to the right */
+}
+.log-table th:nth-child(15), .log-table td:nth-child(15) { /* Additional Charge 2 */
+    width: 110px;
+    min-width: 100px;
+    text-align: right;
+}
+.log-table th:nth-child(16), .log-table td:nth-child(16) { /* Total Due */
+    width: 110px;
+    min-width: 100px;
+    text-align: right;
+}
+.log-table th:nth-child(17), .log-table td:nth-child(17) { /* Payment Amount */
+    width: 130px;
+    min-width: 110px;
+    text-align: right;
+}
+.log-table th:nth-child(18), .log-table td:nth-child(18) { width: 130px; min-width: 110px; } /* Payment Date */
+.log-table th:nth-child(19), .log-table td:nth-child(19) { width: 110px; min-width: 100px; } /* Payment Mode */
+.log-table th:nth-child(20), .log-table td:nth-child(20) { width: 110px; min-width: 100px; } /* Cheque Num */
+.log-table th:nth-child(21), .log-table td:nth-child(21) { width: 130px; min-width: 110px; } /* Cheque Draw Date */
+.log-table th:nth-child(22), .log-table td:nth-child(22) { width: 180px; min-width: 150px; } /* Description */
+.log-table th:nth-child(23), .log-table td:nth-child(23) { width: 90px; min-width: 80px; text-align: center; } /* Action */
+
+.log-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #e8e8e8; /* Lighter grey header */
+    z-index: 1;
+    box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* Softer shadow */
+    font-weight: 600; /* Slightly bolder */
+    text-align: center; /* Center header text */
+    color: #333;
+    white-space: nowrap; /* Keep headers on single line */
+}
+
+/* Input/Textarea/Select within the log table cells - Excel-like styling */
+.log-table input[type="text"],
+.log-table input[type="number"],
+.log-table input[type="date"],
+.log-table textarea,
+.log-table select { /* Added select here */
+    width: 100%;
+    border: none; /* Remove border */
+    outline: none; /* Remove outline on focus */
+    padding: 0; /* Remove padding, let cell padding handle it */
+    margin: 0; /* Remove margin */
+    box-shadow: none; /* Remove shadow */
+    background-color: transparent; /* Make background transparent */
+    font-family: inherit; /* Inherit font from table */
+    font-size: 0.9em; /* Reduced font size for Excel-like feel */
+    color: inherit; /* Inherit text color */
+    text-align: inherit; /* Inherit text alignment */
+    resize: none; /* Prevent manual resizing of textarea */
+    overflow: hidden; /* Hide scrollbar if content fits */
+    vertical-align: middle; /* Ensure vertical alignment for input/textarea content */
+}
+
+/* Add a subtle border/highlight on input/textarea/select focus for edit indication */
+.log-table input[type="text"]:focus,
+.log-table input[type="number"]:focus,
+.log-table input[type="date"]:focus,
+.log-table textarea:focus,
+.log-table select:focus { /* Added select here */
+    border: 1px solid #0d6efd; /* Blue border on focus */
+    background-color: #fff; /* White background on focus */
+    padding: 0.1rem 0.4rem; /* Adjust padding to compensate for border */
+    margin: -1px; /* Adjust margin to compensate for border */
+    overflow: auto; /* Show scrollbar on focus if content overflows */
+}
+
+/* Specific style for readonly fields to ensure consistent background */
+.log-table input[readonly],
+.log-table textarea[readonly] {
+    background-color: #f0f0f0; /* Light grey background for readonly fields */
+    opacity: 1; /* Ensure it's not faded */
+    border: none; /* Ensure no border even when readonly */
+    padding: 0.2rem 0.5rem; /* Consistent padding */
+}
+/* Align numeric readonly fields to the right */
+.log-table input[type="number"][readonly] {
+    text-align: right;
+}
+/* Style for the Total Maintenance Amount Due field */
+.log-table input[name="total_maintenance_amount"] {
+    font-weight: bold;
+    text-align: right;
+    background-color: #e9ecef; /* Slightly darker background for total */
+}
+/* Style for the Payment Amount field */
+.log-table input[name="payment_amount"] { /* Changed from actual_payment_amount */
+    font-weight: bold;
+}
+.maintenance-log-area {
+    background-color: #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    min-height: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap; /* Preserves whitespace and wraps lines */
+    font-size: 0.9em;
+    color: #343a40;
+    line-height: 1.4;
+}
+.loading-spinner {
+    display: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 10px;
+}
+.status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* Validation styles */
+.log-table input.is-invalid,
+.log-table textarea.is-invalid,
+.log-table select.is-invalid { /* Added select here */
+    border: 1px solid #dc3545 !important; /* Red border for invalid fields */
+    padding: 0.1rem 0.4rem; /* Adjust padding to compensate for border */
+    margin: -1px; /* Adjust margin to compensate for border */
+}
+.log-table .invalid-feedback {
+    display: none; /* Hidden by default */
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.8em;
+    color: #dc3545;
+    text-align: left;
+    padding-left: 0.5rem; /* Indent message slightly */
+}
+.log-table input.is-invalid + .invalid-feedback,
+.log-table textarea.is-invalid + .invalid-feedback,
+.log-table select.is-invalid + .invalid-feedback { /* Added select here */
+    display: block; /* Show when input is invalid */
+}
+.nav-tabs {
+    margin-bottom: 20px;
+}
+.nav-link {
+    color: #495057;
+    font-weight: 500;
+}
+.nav-link.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}

@@ -1,0 +1,172 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+}
+.container {
+    max-width: 1500px;
+    margin-top: 10px;
+    /* background-color: #ffffff; */
+    /* border-radius: 12px; */
+    /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+    padding: 30px;
+}
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    transition: background-color 0.3s ease;
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+.btn-danger {
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
+.table-container {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid #a0a0a0;
+    border-radius: 0;
+}
+.table {
+    margin-bottom: 0;
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    background-color: #fff;
+}
+.table th, .table td {
+    vertical-align: middle;
+    padding: 0.2rem 0.75rem;
+    border: 1px solid #d0d0d0;
+    word-wrap: break-word;
+    height: 30px;
+}
+.table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #e8e8e8;
+    z-index: 1;
+    box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    text-align: center;
+    color: #333;
+    white-space: nowrap;
+}
+.table input[type="text"],
+.table input[type="number"],
+.table select {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    background-color: transparent;
+    font-family: inherit;
+    font-size: 0.9em;
+    color: inherit;
+    text-align: inherit;
+    resize: none;
+    overflow: hidden;
+    vertical-align: middle;
+}
+.table input[type="text"]:focus,
+.table input[type="number"]:focus,
+.table select:focus {
+    border: 1px solid #0d6efd;
+    background-color: #fff;
+    padding: 0.1rem 0.4rem;
+    margin: -1px;
+    overflow: auto;
+}
+.table input[readonly] {
+    background-color: #f0f0f0;
+    opacity: 1;
+}
+.status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.loading-spinner {
+    display: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 10px;
+}
+.nav-tabs {
+    margin-bottom: 20px;
+}
+.nav-link {
+    color: #495057;
+    font-weight: 500;
+}
+.nav-link.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+.disabled-field {
+    background-color: #e9ecef !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+.disabled-field:focus {
+    border-color: #ced4da !important;
+    box-shadow: none !important;
+}
+
+.emphasis-field {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    animation: pulse 1.5s infinite;
+}
+
+/* @keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    50% {
+        box-shadow: 0 0 0 0.35rem rgba(13, 110, 253, 0.35);
+    }
+    100% {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+} */
+
+/* Add tooltip styling for disabled fields */
+.disabled-field:hover::after {
+    content: "Select Space Type first";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+}
