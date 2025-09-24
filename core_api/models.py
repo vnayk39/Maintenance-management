@@ -9,6 +9,7 @@ class SpacewiseCharges(models.Model):
     sinking_funds = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Sinking funds")
     lease_rent = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Lease rent")
     parking = models.JSONField(default=dict)
+    additional_charges = models.JSONField(default=dict)
 
     class Meta:
         verbose_name = "Spacewise Maintenance Charges"
@@ -52,6 +53,7 @@ class MaintenanceDataNew(models.Model):
     periodic_building_maintenance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Periodic building maintenance")
     repair_and_maintenance_fund = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Repair and maintenance fund")
     sinking_funds = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Sinking funds")
+    additional_charges = models.JSONField(default=dict)
     lease_rent = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Lease rent Charge")
     apply_lease_rent = models.BooleanField(default=False, help_text="Apply lease rent for this room?")
     num_of_vehicles = models.IntegerField(default=0, help_text="Number of vehicles(0 for no parking)")
@@ -98,3 +100,4 @@ class PayLogRe(models.Model):
 
     def __str__(self):
         return f"Payment for Room {self.room_no} - {self.payment_amount} on {self.payment_date}"
+
