@@ -31,12 +31,13 @@ function setCharge() {
         tr_count += 1;
         saveChargesRowData(row, "additional_charges", chrgedict);
         chrgeVal.value = 0;
-    });
-    setTimeout(() => {
-    hideLoading(`Added new charge: '${chrgeName}' successfully!`);
-    renderChargesHeader();
-    fetchSpacewiseCharges();
-}, 300); 
+        setTimeout(() => {
+            hideLoading(`Added new charge: '${chrgeName}' successfully!`);
+            renderChargesHeader();
+            fetchSpacewiseCharges();
+        }, 300); 
+        });
+  
 }
 
 function remCharge(chargeName){
@@ -97,7 +98,7 @@ function renderChargesHeader() {
     initBulkCheckboxHandlers(
             "spacewiseChargesTable",           // tableId
             "selectAllChargesCheckbox",        // select-all checkbox
-            "charges-bulkDeleteBtn",           // bulk delete button
+            "charges-bulkDeleteBtn",                   // bulk delete button
             deleteChargesRowData               // your row delete function (id, rowElement)
         );
 }
@@ -108,7 +109,6 @@ function addChargesTableRow(rowData = {}) {
     newRow.dataset.additional_charges = JSON.stringify(rowData.additional_charges || {});
 
     const fields = [
-        //{ name: 'space_type', type: 'select', value: rowData.space_type || '', options: SPACE_TYPES, editable: !rowData.id },
         { name: 'space_type', type: 'text', value: rowData.space_type },
         { name: 'periodic_building_maintenance', type: 'number', value: parseFloat(rowData.periodic_building_maintenance || 0).toFixed(2) },
         { name: 'repair_and_maintenance_fund', type: 'number', value: parseFloat(rowData.repair_and_maintenance_fund || 0).toFixed(2) },
@@ -170,7 +170,7 @@ function addChargesTableRow(rowData = {}) {
             element = document.createElement('input');
             element.type = field.type;
             element.value = 0;
-            element.id = `chrge_${newRow.dataset.id || spacewiseChargesTableBody.rows.length}`;
+            element.id = `chrge_${spacewiseChargesTableBody.rows.length}`;
         }
         else {
             element = document.createElement('input');
