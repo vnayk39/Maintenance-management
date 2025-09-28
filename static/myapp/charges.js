@@ -3,8 +3,6 @@ const spacewiseChargesTableBody = document.querySelector('#spacewiseChargesTable
 const addchargesRowBtn = document.getElementById('addChargesRowBtn');
 const refreshchargesBtn = document.getElementById('refreshChargesBtn');
 
-const SPACE_TYPES = ["1BHK", "2BHK", "1RK", "SHP", "OTHER"];
-
 async function fetchSpacewiseCharges() {
     showLoading("Fetching spacewise charges...");
     try {
@@ -20,41 +18,41 @@ async function fetchSpacewiseCharges() {
     }
 }
 
-       function setCharge() {
-        let chrgeInput = document.getElementById('ChrgeCol');
-        let chrgeName = chrgeInput.value.trim();
-        let chrgedict ={}
-        let tr_count = 1
-        spacewiseChargesTableBody.querySelectorAll("tr").forEach(row => {
-            chrgeVal = document.getElementById(`chrge_${tr_count}`);
-            chrgedict={
-                [`${chrgeName}`]: parseFloat(chrgeVal.value).toFixed(2)
-            }
-            tr_count += 1;
-            saveChargesRowData(row, "additional_charges", chrgedict);
-            chrgeVal.value = 0;
-        });
-        setTimeout(() => {
-        hideLoading(`Added new charge: '${chrgeName}' successfully!`);
-        renderChargesHeader();
-        fetchSpacewiseCharges();
-    }, 300); 
-    }
+function setCharge() {
+    let chrgeInput = document.getElementById('ChrgeCol');
+    let chrgeName = chrgeInput.value.trim();
+    let chrgedict ={}
+    let tr_count = 1
+    spacewiseChargesTableBody.querySelectorAll("tr").forEach(row => {
+        chrgeVal = document.getElementById(`chrge_${tr_count}`);
+        chrgedict={
+            [`${chrgeName}`]: parseFloat(chrgeVal.value).toFixed(2)
+        }
+        tr_count += 1;
+        saveChargesRowData(row, "additional_charges", chrgedict);
+        chrgeVal.value = 0;
+    });
+    setTimeout(() => {
+    hideLoading(`Added new charge: '${chrgeName}' successfully!`);
+    renderChargesHeader();
+    fetchSpacewiseCharges();
+}, 300); 
+}
 
-    function remCharge(chargeName){
-         spacewiseChargesTableBody.querySelectorAll("tr").forEach(row => {
-            let existing = {};
-            try { existing = JSON.parse(row.dataset.additional_charges || '{}'); } catch { existing = {}; }
-            delete existing[chargeName];
-            saveChargesRowData(row, "additional_charges", existing, rem=true);
-            EXTRA_CHARGE_KEYS.delete(chargeName);
-            });
+function remCharge(chargeName){
+    spacewiseChargesTableBody.querySelectorAll("tr").forEach(row => {
+    let existing = {};
+    try { existing = JSON.parse(row.dataset.additional_charges || '{}'); } catch { existing = {}; }
+    delete existing[chargeName];
+    saveChargesRowData(row, "additional_charges", existing, rem=true);
+    EXTRA_CHARGE_KEYS.delete(chargeName);
+    });
     // Re-render header & rows so the deleted column disappears
-       setTimeout(() => {
+    setTimeout(() => {
         renderChargesHeader();
         fetchSpacewiseCharges();
     }, 300); 
-    }
+}
 
 function renderChargesTable(data) {
     spacewiseChargesTableBody.innerHTML = '';
@@ -76,24 +74,32 @@ function renderChargesTable(data) {
 function renderChargesHeader() {
     const thead = document.querySelector('#spacewiseChargesTable thead tr');
     thead.innerHTML = `
+        <th><input type="checkbox" id="selectAllChargesCheckbox"></th>
         <th>Space Type</th>
-        <th>PBM</th>
-        <th>RMF</th>
+        <th>Building Maintenance</th>
+        <th>Repair Funds</th>
         <th>Sinking Funds</th>
         <th>Parking (JSON)</th>
-        <th>Lease Rent</th>
+        <th>Lease/Rent</th>
     `;
 
     // Add dynamic extra charge headers
     EXTRA_CHARGE_KEYS.forEach(chargeName => {
-        thead.innerHTML += `<th>${chargeName}<br><br><button id="removeChrgeBtn", onclick="remCharge('${chargeName}')">remove</button></th>`;
+        thead.innerHTML += `<th>${chargeName}<br><button id="removeChrgeBtn" class ="btn btn-danger" onclick="remCharge('${chargeName}')">remove</button></th>`;
     });
 
     // Action col
     thead.innerHTML += `
-    <th><input id="ChrgeCol", type="text", placeholder="Charge"><br><br><button id="addChrgeBtn", onclick="setCharge()">set</button></th>
+    <th><input id="ChrgeCol" type="text" placeholder="Enter Charge"><br><button id="addChrgeBtn" class="btn btn-success-set" onclick="setCharge()">set</button></th>
     <th>Action</th>
     `;
+
+    initBulkCheckboxHandlers(
+            "spacewiseChargesTable",           // tableId
+            "selectAllChargesCheckbox",        // select-all checkbox
+            "charges-bulkDeleteBtn",           // bulk delete button
+            deleteChargesRowData               // your row delete function (id, rowElement)
+        );
 }
 
 function addChargesTableRow(rowData = {}) {
@@ -112,6 +118,14 @@ function addChargesTableRow(rowData = {}) {
         { name: 'charge_standin', type:'standin' },
         { name: 'additional_charges', id:'chrge', type: 'number', value: parseFloat(rowData.additional_charges || 0).toFixed(2) }
     ];
+     //checkbox
+    const selectCell = newRow.insertCell();
+    selectCell.classList.add("select-cell");
+    const selectCheckbox = document.createElement('input');
+    selectCheckbox.type = 'checkbox';
+    // selectCheckbox.id = 'charges-row-select-checkbox'
+    selectCheckbox.classList.add('row-select-checkbox', 'ms-2'); // add spacing
+    selectCell.appendChild(selectCheckbox);
 
     fields.forEach(field => {
         const cell = newRow.insertCell();
@@ -145,8 +159,6 @@ function addChargesTableRow(rowData = {}) {
                 }
             });
         } else if(field.name === 'charge_standin'){
-            // element = document.createElement('span');
-            // element.style.display = 'none';
             let chargesObj = rowData.additional_charges || {};
             EXTRA_CHARGE_KEYS.forEach(key => {
                 createExtraChargeCell(newRow, key, chargesObj[key] || 0);
@@ -209,7 +221,10 @@ function createExtraChargeCell(row, key, value) {
     input.classList.add('form-control');
 
     input.addEventListener('change', () => {
-        saveChargesRowData(row, "additional_charges", { [key]: parseFloat(input.value) || 0 });
+        saveChargesRowData(row, "additional_charges", { [key]: parseFloat(input.value).toFixed(2) || 0 });
+        setTimeout(() => {
+            fetchSpacewiseCharges();
+        }, 300); 
     });
     cell.appendChild(input);
 }
@@ -229,7 +244,6 @@ async function saveChargesRowData(row, changedFieldName, changedValue, rem=false
             }
         } else if(element.name === 'additional_charges'){
             if(!rowId){
-                console.log('ok');
                 rowData[element.name] = changedValue;
             }
             else{ 
