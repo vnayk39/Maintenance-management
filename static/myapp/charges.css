@@ -27,11 +27,19 @@ body {
     border-radius: 8px;
     padding: 10px 15px;
 }
+.btn-success-set {
+    background-color: #28a745;
+    border-color: #28a745;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
 .btn-danger {
     border-radius: 5px;
     padding: 5px 10px;
     font-size: 0.85em;
 }
+
 .table-container {
     max-height: 600px;
     overflow-y: auto;
@@ -52,6 +60,11 @@ body {
     border: 1px solid #d0d0d0;
     word-wrap: break-word;
     height: 30px;
+    width: 160px;
+}
+.table th:nth-child(1), th:nth-last-child(1), .table td:nth-child(1), td:nth-last-child(1){
+    width: 70px;
+    min-width: 70px;
 }
 .table thead th {
     position: sticky;
@@ -64,6 +77,7 @@ body {
     color: #333;
     white-space: nowrap;
 }
+
 .table input[type="text"],
 .table input[type="number"],
 .table select,
@@ -115,4 +129,32 @@ body {
     background-color: #0d6efd;
     border-color: #0d6efd;
     color: white;
+}
+
+/* Styled checkbox buttons inside Action column */
+.row-select-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    accent-color: #dc3545; /* matches Bootstrap red */
+    margin-top: 8px;
+}
+
+/* Select All checkbox in header */
+#selectAllChargesCheckbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    accent-color: #0d6efd; /* matches Bootstrap primary */
+    margin-top: 8px;
+}
+
+/* Bulk delete button bottom-center */
+#charges-bulkDeleteBtn {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none; /* hidden until at least one row is selected */
+    z-index: 999;
 }
