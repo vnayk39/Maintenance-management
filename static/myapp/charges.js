@@ -92,7 +92,7 @@ function renderChargesHeader() {
     // Action col
     thead.innerHTML += `
     <th><input id="ChrgeCol" type="text" placeholder="Enter Charge"><br><button id="addChrgeBtn" class="btn btn-success-set" onclick="setCharge()">set</button></th>
-    <th>Action</th>
+    <th></th>
     `;
 
     initBulkCheckboxHandlers(
@@ -116,7 +116,7 @@ function addChargesTableRow(rowData = {}) {
         { name: 'parking', type: 'textarea', value: JSON.stringify(rowData.parking || {}, null, 2) }, // Changed to textarea for JSON
         { name: 'lease_rent', type: 'number', value: parseFloat(rowData.lease_rent || 0).toFixed(2) },
         { name: 'charge_standin', type:'standin' },
-        { name: 'additional_charges', id:'chrge', type: 'number', value: parseFloat(rowData.additional_charges || 0).toFixed(2) }
+        { name: 'additional_charges', id:'chrge', type: 'number'}
     ];
      //checkbox
     const selectCell = newRow.insertCell();
@@ -161,7 +161,7 @@ function addChargesTableRow(rowData = {}) {
         } else if(field.name === 'charge_standin'){
             let chargesObj = rowData.additional_charges || {};
             EXTRA_CHARGE_KEYS.forEach(key => {
-                createExtraChargeCell(newRow, key, chargesObj[key] || 0);
+                createExtraChargeCell(newRow, key, chargesObj[key] || parseFloat(0).toFixed(2));
             });
             cell.style.display = "none";
             return;
@@ -169,7 +169,7 @@ function addChargesTableRow(rowData = {}) {
         else if(field.id === 'chrge'){
             element = document.createElement('input');
             element.type = field.type;
-            element.value = 0;
+            element.value = parseFloat(0).toFixed(2);
             element.id = `chrge_${spacewiseChargesTableBody.rows.length}`;
         }
         else {
@@ -180,12 +180,11 @@ function addChargesTableRow(rowData = {}) {
 
         element.name = field.name;
         element.classList.add('form-control');
-        
         element.addEventListener('change', async (event) => {
             await saveChargesRowData(newRow, event.target.name, event.target.value);
         });
         
-        cell.appendChild(element);
+        cell.appendChild(element); //reason 
     });
 
     // Action Column (Remove Button)
@@ -218,7 +217,7 @@ function createExtraChargeCell(row, key, value) {
     input.type = 'number';
     input.name = key;
     input.value = value || 0;
-    input.classList.add('form-control');
+    input.classList.add('form-control', 'extra-charge-input');
 
     input.addEventListener('change', () => {
         saveChargesRowData(row, "additional_charges", { [key]: parseFloat(input.value).toFixed(2) || 0 });
@@ -232,7 +231,9 @@ function createExtraChargeCell(row, key, value) {
 async function saveChargesRowData(row, changedFieldName, changedValue, rem=false) {
     const rowId = row.dataset.id;
     const rowData = {};
-    row.querySelectorAll('input, select, textarea').forEach(element => { // Added textarea
+    row.querySelectorAll('input, select, textarea').forEach(element => { 
+        if (element.classList.contains('extra-charge-input')) return; // skip dynamic for now
+
         if (element.name === 'parking') { // Special handling for JSON field
             try {
                 rowData[element.name] = JSON.parse(element.value);
@@ -242,29 +243,39 @@ async function saveChargesRowData(row, changedFieldName, changedValue, rem=false
                 element.style.borderColor = 'red';
                 throw new Error("Invalid JSON input for parking."); // Stop save process
             }
-        } else if(element.name === 'additional_charges'){
-            if(!rowId){
-                rowData[element.name] = changedValue;
-            }
-            else{ 
-                try {
-                    existing = row.dataset.additional_charges ? JSON.parse(row.dataset.additional_charges) : {};
-                } catch (e) {
-                    existing = {};
-                }
-                if(rem){
-                    rowData[element.name] = changedValue;
-                }
-                else{
-                    rowData[element.name] = Object.assign({},existing, changedValue);
-
-                }
-            } 
-        }          
+        }       
         else {
             rowData[element.name] = element.type === 'number' ? parseFloat(element.value) : element.value.trim();
         }
     });
+    let additionalCharges = {}
+      if (changedFieldName === "additional_charges" && changedValue) {
+        // Merge into existing dataset
+        try {
+            additionalCharges = row.dataset.additional_charges ? JSON.parse(row.dataset.additional_charges) : {};
+        } catch (e) {
+            additionalCharges = {};
+        }
+
+        if (rem) {
+            // overwrite with changedValue when removing
+            additionalCharges = changedValue;
+        } else {
+            // merge existing + new charge
+            additionalCharges = Object.assign({}, additionalCharges, changedValue);
+        }
+    } 
+    else {
+        // Case 2: build additional_charges from row inputs
+        row.querySelectorAll('.extra-charge-input').forEach(input => {
+            additionalCharges[input.name] = parseFloat(input.value) || 0;
+        });
+    }
+
+    rowData['additional_charges'] = additionalCharges;
+    row.dataset.additional_charges = JSON.stringify(additionalCharges);
+
+
 
     if (!rowData.space_type) {
         showCustomModal("Validation Error", "Space Type cannot be empty.", true);
