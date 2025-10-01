@@ -63,8 +63,8 @@ body {
     width: 160px;
 }
 .table th:nth-child(1), th:nth-last-child(1), .table td:nth-child(1), td:nth-last-child(1){
-    width: 70px;
-    min-width: 70px;
+    width: 60px;
+    min-width: 60px;
 }
 .table thead th {
     position: sticky;
