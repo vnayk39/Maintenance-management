@@ -27,7 +27,7 @@
             const entriesResponse = await fetch(`${API_BASE_URL}maintenance-data-new/`);
             if (!entriesResponse.ok) throw new Error(`HTTP error! status: ${entriesResponse.status} for maintenance entries`);
             const entriesData = await entriesResponse.json();
-            
+
             renderMaintenanceTable(entriesData);
             hideLoading("Data loaded successfully!");
         } catch (error) {
@@ -37,8 +37,17 @@
         }
     }
 
+    //new additions
     function renderMaintenanceTable(data) {
         roomMaintenanceTableBody.innerHTML = '';
+        data.forEach(rowData => {
+            if (rowData.additional_charges) {
+                Object.keys(rowData.additional_charges).forEach(k => EXTRA_CHARGE_KEYS.add(k));
+            }
+        });
+        // now re-render header row dynamically
+        renderMaintHeader();
+
         data.forEach(rowData => {
         addMaintenanceTableRow(rowData);
         });
@@ -46,6 +55,43 @@
             addMaintenanceTableRow({}); // Add an empty row for new entry if no data
         }
     }
+
+    function renderMaintHeader(){
+    const thead = document.querySelector('#roomMaintenanceTable thead tr');
+    thead.innerHTML = `
+        <th><input type="checkbox" id="selectAllCheckbox"></th>
+        <th>Room No.</th>
+        <th>Owners</th>
+        <th>Space Type</th>
+        <th>Building Maintenance</th>
+        <th>Repair Funds</th>
+        <th>Sinking Funds</th>
+    `;
+
+    // Add dynamic extra charge headers
+    EXTRA_CHARGE_KEYS.forEach(chargeName => {
+        thead.innerHTML += `<th>${chargeName}</th>`;
+    });
+
+    thead.innerHTML += `
+        <th>Num Vehicles</th>
+        <th>Parking</th>
+        <th>Lease/Rent</th>
+        <th>Apply Lease/Rent</th>
+        <th>Penalty</th>
+        <th>Balance</th>
+        <th>Total</th>
+        <th></th>
+        `;
+
+    initBulkCheckboxHandlers(
+            "roomMaintenanceTable",      // tableId
+            "selectAllCheckbox",         // select-all checkbox
+            "bulkDeleteBtn",            // bulk delete button
+            deleteMaintenanceRowData    // your row delete function (id, rowElement)
+        );
+    }
+//  end
 
     function isSpaceTypeSelected(row) {
         const spaceTypeSelect = row.querySelector('[name="space_type"]');
@@ -58,7 +104,7 @@
             'sinking_funds', 'num_of_vehicles', 'parking', 'lease_rent',
             'apply_lease_rent', 'penalty', 'balance'
         ];
-        
+
         fieldsToControl.forEach(fieldName => {
             const field = row.querySelector(`[name="${fieldName}"]`);
             if (field) {
@@ -94,6 +140,7 @@
     function addMaintenanceTableRow(rowData = {}) {
         const newRow = roomMaintenanceTableBody.insertRow();
         newRow.dataset.id = rowData.id || '';
+        newRow.dataset.additional_charges = JSON.stringify(rowData.additional_charges || {});
 
         const initialApplyLeaseRent = (rowData.apply_lease_rent === undefined || rowData.apply_lease_rent === null) ? true : rowData.apply_lease_rent;
         const initialNumVehicles = rowData.num_of_vehicles !== undefined ? rowData.num_of_vehicles : 0;
@@ -108,6 +155,8 @@
             { name: 'periodic_building_maintenance', type: 'number', value: parseFloat(rowData.periodic_building_maintenance || 0).toFixed(2), readonly: true },
             { name: 'repair_and_maintenance_fund', type: 'number', value: parseFloat(rowData.repair_and_maintenance_fund || 0).toFixed(2), readonly: true },
             { name: 'sinking_funds', type: 'number', value: parseFloat(rowData.sinking_funds || 0).toFixed(2), readonly: true },
+            { name: 'charge_standin', type:'standin' }, //new
+            { name: 'additional_charges', type: 'standin', id:'chrge'}, //new
             { name: 'num_of_vehicles', type: 'select_num_vehicles', value: initialNumVehicles, disabled: !isExistingDataWithSpaceType },
             { name: 'parking', type: 'number', value: parseFloat(rowData.parking || 0).toFixed(2), readonly: true },
             { name: 'lease_rent', type: 'number', value: parseFloat(rowData.lease_rent || 0).toFixed(2), readonly: true },
@@ -116,6 +165,15 @@
             { name: 'balance', type: 'number', value: parseFloat(rowData.balance || 0).toFixed(2), disabled: !isExistingDataWithSpaceType },
             { name: 'total', type: 'number', value: parseFloat(rowData.total || 0).toFixed(2), readonly: true }
         ];
+
+        //checkbox new
+        const selectCell = newRow.insertCell();
+        selectCell.classList.add("select-cell");
+        const selectCheckbox = document.createElement('input');
+        selectCheckbox.type = 'checkbox';
+        selectCheckbox.classList.add('row-select-checkbox', 'ms-2'); // add spacing
+        selectCell.appendChild(selectCheckbox);
+
 
         fields.forEach(field => {
             const cell = newRow.insertCell();
@@ -146,22 +204,22 @@
                 // Modified event listener for space type
                 element.addEventListener('change', (event) => {
                     const spaceTypeSelected = event.target.value !== '';
-                    
+
                     // Enable/disable all other fields based on space type selection
                     updateFieldsAccessibility(newRow, spaceTypeSelected);
-                    
+
                     if (spaceTypeSelected) {
                         const currentApplyLeaseRent = newRow.querySelector('[name="apply_lease_rent"]').value === 'true';
                         const currentNumOfVehicles = parseInt(newRow.querySelector('[name="num_of_vehicles"]').value);
                         autoFillMaintenanceCharges(newRow, event.target.value, currentApplyLeaseRent, currentNumOfVehicles);
                         updateMaintenanceRowTotal(newRow);
-                        
+
                         // Focus on room field after space type is selected
                         const roomField = newRow.querySelector('[name="room"]');
                         if (roomField && !roomField.value) {
                             roomField.focus();
                         }
-                        
+
                         // Don't save yet if it's a new row without room number
                         if (newRow.dataset.id || newRow.querySelector('[name="room"]').value) {
                             saveMaintenanceRowData(newRow, event.target.name, event.target.value);
@@ -175,7 +233,7 @@
             } else if (field.type === 'select_boolean') {
                 element = document.createElement('select');
                 element.classList.add('form-select');
-                
+
                 const optionYes = document.createElement('option');
                 optionYes.value = 'true';
                 optionYes.textContent = 'Yes';
@@ -195,7 +253,7 @@
                         event.target.value = field.value ? 'true' : 'false';
                         return;
                     }
-                    
+
                     const currentSpaceTypeId = newRow.querySelector('[name="space_type"]').value;
                     const currentNumOfVehicles = parseInt(newRow.querySelector('[name="num_of_vehicles"]').value);
                     const newApplyLeaseRent = event.target.value === 'true';
@@ -204,10 +262,23 @@
                     saveMaintenanceRowData(newRow, event.target.name, newApplyLeaseRent);
                 });
 
-            } else if (field.type === 'select_num_vehicles') {
+            }//new
+            else if(field.name === 'charge_standin'){
+                    let chargesObj = rowData.additional_charges || {};
+                    EXTRA_CHARGE_KEYS.forEach(key => {
+                        createMaintExtraChargeCell(newRow, key, chargesObj[key] || 0);
+                    });
+                    cell.style.display = "none";
+                    return;
+                }
+            else if (field.id === 'chrge'){
+                cell.style.display = "none";
+                return;
+            } //end
+            else if (field.type === 'select_num_vehicles') {
                 element = document.createElement('select');
                 element.classList.add('form-select');
-                
+
                 const defaultNumVehiclesOption = document.createElement('option');
                 defaultNumVehiclesOption.value = '0';
                 defaultNumVehiclesOption.textContent = '0 Vehicles';
@@ -229,7 +300,7 @@
                         event.target.value = '0';
                         return;
                     }
-                    
+
                     const currentSpaceTypeId = newRow.querySelector('[name="space_type"]').value;
                     const currentApplyLeaseRent = newRow.querySelector('[name="apply_lease_rent"]').value === 'true';
                     const newNumOfVehicles = parseInt(event.target.value);
@@ -248,7 +319,7 @@
 
             element.name = field.name;
             element.classList.add('form-control');
-            
+
             // if (!field.readonly && field.name !== 'apply_lease_rent' && field.name !== 'num_of_vehicles')
                 if (
                 !field.readonly &&
@@ -264,7 +335,7 @@
                         event.preventDefault();
                     }
                 });
-                
+
                 element.addEventListener('change', async (event) => {
                     if (!isSpaceTypeSelected(newRow)) {
                         event.target.value = field.value || '';
@@ -272,7 +343,7 @@
                     }
                     await saveMaintenanceRowData(newRow, event.target.name, event.target.value);
                 });
-                
+
                 if (field.name === 'penalty' || field.name === 'balance') {
                     element.addEventListener('input', () => {
                         if (isSpaceTypeSelected(newRow)) {
@@ -281,7 +352,7 @@
                     });
                 }
             }
-            
+
             cell.appendChild(element);
         });
 
@@ -297,7 +368,7 @@
         removeBtn.addEventListener('click', async () => {
             const rowId = newRow.dataset.id;
             const roomName = rowData.room || 'this unsaved row';
-            
+
             if (rowId) {
                 const confirmationModal = document.createElement('div');
                 confirmationModal.innerHTML = `
@@ -345,7 +416,7 @@
                 spaceTypeField.classList.add('emphasis-field');
             }
         }
-        
+
         // Only auto-fill if there's existing data with space type
         if (rowData.space_type) {
             autoFillMaintenanceCharges(newRow, rowData.space_type, initialApplyLeaseRent, initialNumVehicles);
@@ -353,7 +424,26 @@
             updateMaintenanceRowTotal(newRow);
         }
     }
-    
+
+    //new
+    function createMaintExtraChargeCell(row, key, value) {
+        const cell = row.insertCell();
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.name = key;
+        input.value = value || 0;
+        input.classList.add('form-control', 'extra-charge-input');
+
+        input.addEventListener('input', () => {
+            saveMaintenanceRowData(row, "additional_charges", { [key]: parseFloat(input.value).toFixed(2) || 0 });
+            setTimeout(()=>{
+                // fetchInitialMaintenanceData();
+            }, 300);
+        });
+
+        cell.appendChild(input);
+    }
+
     function clearMaintenanceRowFields(row) {
         const fields = ['room','owners','periodic_building_maintenance','repair_and_maintenance_fund',
                         'sinking_funds','num_of_vehicles','parking','lease_rent',
@@ -369,7 +459,7 @@
         const leaseRentInput = row.querySelector('[name="lease_rent"]');
         const parkingInput = row.querySelector('[name="parking"]');
         const numVehiclesSelect = row.querySelector('[name="num_of_vehicles"]');
-        
+
         // Rebuild num_of_vehicles dropdown based on selected space type's parking rates
         numVehiclesSelect.innerHTML = '';
         const defaultNumVehiclesOption = document.createElement('option');
@@ -383,7 +473,7 @@
             row.querySelector('[name="periodic_building_maintenance"]').value = parseFloat(selectedSpaceType.periodic_building_maintenance || 0).toFixed(2);
             row.querySelector('[name="repair_and_maintenance_fund"]').value = parseFloat(selectedSpaceType.repair_and_maintenance_fund || 0).toFixed(2);
             row.querySelector('[name="sinking_funds"]').value = parseFloat(selectedSpaceType.sinking_funds || 0).toFixed(2);
-            
+
             // Lease Rent logic
             if (applyLeaseRent) {
                 leaseRentInput.value = parseFloat(selectedSpaceType.lease_rent || 0).toFixed(2);
@@ -393,7 +483,7 @@
 
              // Parking logic - using JSON field from SpacewiseCharges
         const parkingRates = selectedSpaceType.parking || {};
-        
+
         // Build dropdown options based on available parking rates in the JSON
             Object.keys(parkingRates).forEach(vehicleCount => {
                 if (vehicleCount !== '0') { // Skip 0 as we already have it as default
@@ -415,6 +505,15 @@
         // Get parking rate from JSON using num_of_vehicles as key
             const parkingRate = parkingRates[String(num_of_vehicles)] || 0;
             parkingInput.value = parseFloat(parkingRate).toFixed(2);
+
+        // NEW: Auto-fill additional charges
+            const extraCharges = selectedSpaceType.additional_charges || {};
+            Object.entries(extraCharges).forEach(([key, val]) => {
+            const input = row.querySelector(`[name="${key}"]`);
+            if (input && input.value == 0) {
+                input.value = parseFloat(val).toFixed(2);
+            }
+        });
 
         } else {
             const fieldsToClear = [
@@ -453,8 +552,8 @@
     async function saveMaintenanceRowData(row, changedFieldName, changedValue) {
         const rowId = row.dataset.id;
         const rowData = {};
-        
-        
+
+
         row.querySelectorAll('input, select').forEach(element => {
             if (element.name === 'space_type') {
                 const selectedSpaceType = spacewiseChargesCache.find(sc => sc.id == element.value);
@@ -469,6 +568,12 @@
             else {
                 rowData[element.name] = element.type === 'number' ? parseFloat(element.value) : element.value.trim();
             }
+            //new
+            let additionalCharges = {};
+            row.querySelectorAll('.extra-charge-input').forEach(input => {
+                additionalCharges[input.name] = parseFloat(input.value).toFixed(2) || 0;
+            });
+            rowData['additional_charges'] = additionalCharges;
         });
 
         if (!rowData.room) {
@@ -513,7 +618,7 @@
                 const contentType = response.headers.get('Content-Type');
                 let errorDetails = `Status: ${response.status}`;
                 let responseText = await response.text();
-                
+
                 if (contentType && contentType.includes('application/json')) {
                     try {
                         const errorData = JSON.parse(responseText);
@@ -530,7 +635,7 @@
 
             const responseData = await response.json();
             row.dataset.id = responseData.id; // Update row ID for new entries
-            
+
             // Re-populate the row with fresh data from the server to ensure consistency
             // This is crucial for parking and total, which are calculated on the backend
             //row.querySelector('[name="space_type"]').value = responseData.space_type;
@@ -554,7 +659,7 @@
     async function deleteMaintenanceRowData(rowId, rowElement) {
         showLoading("Deleting data...");
         try {
-            //const response = await authenticatedFetch(`${API_BASE_URL}maintenance-data-new/${rowId}/`, 
+            //const response = await authenticatedFetch(`${API_BASE_URL}maintenance-data-new/${rowId}/`,
             const response = await fetch(`${API_BASE_URL}maintenance-data-new/${rowId}/`, {
                 method: 'DELETE'
             });
