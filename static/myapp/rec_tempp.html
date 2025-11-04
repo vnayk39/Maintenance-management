@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maintenance Invoice</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+  body { font-family: Arial, sans-serif; font-size: 10px; margin: 70px; }
+  .invoice-container { width: 700px; margin: 0 auto; border: 2px solid #000; padding: 10px; }
+  .header { text-align: center; margin-bottom: 10px; }
+  .header h2 { margin:5px 0; font-size:16px; }
+  .header p { margin:2px 0; font-size:12px; }
+  table { width:100%; border-collapse: collapse; }
+  td,th { border:1px solid #000; padding:5px; text-align:left; }
+  .center{text-align:center;} .right{text-align:right;} .bold{font-weight:bold;}
+  .charges-table{margin:10px 0;}
+  .charges-table th{background-color:#f0f0f0;font-weight:bold;text-align:center;}
+  .payment-table{margin-top:10px;}
+  .notes{margin-top:10px;font-size:11px;} .notes li{margin:3px 0;}
+  .signature-section{height:100px;vertical-align:bottom;text-align:center;}
+  .signature-section img { max-width: 100%; max-height: 80px; object-fit: contain; }
+
+  /* Config toggle */
+  .config-toggle {text-align:center; margin-bottom:10px;}
+
+  /* Config panel */
+  .config-container {max-height: 0;max-width:700px; margin:0 auto 20px; padding:15px; border:2px solid #0d6efd; background:#f9f9f9;
+                    opacity: 0; overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease;}
+  .config-container.open {max-height: 1000px; opacity: 1;}
+  .config-container h3{margin-top:0;}
+  .config-container label{display:block;margin:6px 0 2px;font-size:12px;}
+  .config-container input,.config-container textarea{width:100%;padding:4px;font-size:12px;margin-bottom:8px;border:1px solid #aaa;}
+
+  @media print {
+  .no-print,
+  .no-print *,
+  .btn-print,
+  .btn-toggle {display: none !important;visibility: hidden !important;}
+  .page-break {
+    page-break-before: always;
+  }
+  }
+.bottom-controls {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;       /* wrap buttons on smaller screens */
+  z-index: 999;
+}
+   .bottom-controls button {border: none; cursor: pointer;}
+  /*.bottom-controls {width: 700px; margin: 20px auto 10px; display: flex; justify-content: center; gap: 10px;}*/
+  .btn-print, .btn-toggle{transform: translateX(-50%); display: block; z-index: 999;  position: fixed;}
+  .btn-arr{transform: translateX(-50%); display: none; z-index: 999; position: fixed;}
+  .btn-print {background-color:#0d6efd; color:#fff; font-size: 14px; border-radius: 5px; padding: 5px 10px; left:35%}
+  .btn-print:hover { background-color:#0b5ed7; }
+  .btn-toggle {background:#6c757d; color:#fff; font-size: 14px; border-radius: 5px; padding: 5px 10px; left:65%}
+  .btn-toggle:hover { background:#e1e6eb; }
+  .btn-arr {background-color: #ffffff00; color:#000000; border-radius: 50%; padding: 5px 5px; }
+  #next {left:75%;}
+  #prev {left:25%;}
+  #print-all {left:49%;}
+  .btn-arr:hover { background:#dcdcdc; }
+  .btn-arr:disabled { background:#5e5e5e; }
+</style>
+</head>
+<body>
+
+<!-- Config Panel (slides down below buttons) -->
+  <div class="config-container no-print" id="configPanel">
+  <h3>Configure Receipt Settings</h3>
+
+  <label>Society Name:</label>
+  <input type="text" id="cfgSociety">
+
+  <label>Address:</label>
+  <input type="text" id="cfgAddress">
+
+  <label>Registration No:</label>
+  <input type="text" id="cfgRegNo">
+
+  <label>PAN Number:</label>
+  <input type="text" id="cfgPAN">
+
+  <label>Note 1:</label>
+  <input type="text" id="cfgNote1">
+
+  <label>Note 2:</label>
+  <input type="text" id="cfgNote2">
+
+  <label>Note 3:</label>
+  <input type="text" id="cfgNote3">
+
+  <label>Upload Signature (PNG/JPG ≤ 150 KB):</label>
+  <input type="file" id="cfgSignature" accept="image/*">
+  <button type="button" class="btn-remove" onclick="removeSignature()">Remove Signature</button>
+
+  <button class="btn-save" onclick="saveConfig()">Save Config</button>
+  </div>
+
+
+<div class="invoice-container" id="invoice-container" style="display: none;">
+  <!-- Header Section -->
+  <div class="header">
+    <h2 id="societyName">SOCIETY</h2>
+    <p id="societyAddress">Address: </p>
+    <p id="societyRegNo">Registration No : </p>
+    <p id="societyPAN">PAN Number: </p>
+  </div>
+
+  <!-- Name and Invoice Info -->
+  <table class="info-table">
+    <tr>
+      <td width="15%"><strong>Name:</strong></td>
+      <td width="35%" id="ownerName"></td>
+      <td width="25%"><strong>Invoice No:</strong></td>
+      <td width="25%" id="invoiceNo"></td>
+    </tr>
+    <tr>
+      <td><strong>Flat No.:</strong></td>
+      <td id="flatNo"></td>
+      <td><strong>Date:</strong></td>
+      <td id="receiptDate"></td>
+    </tr>
+    <tr>
+      <td></td><td></td>
+      <td><strong>Months:</strong></td>
+      <td id="monthsCovered"></td>
+    </tr>
+  </table>
+
+  <!-- Maintenance Charges Section -->
+  <table id= "charges-table" class="charges-table"></table>
+
+  <!-- Amount in Words -->
+  <table>
+    <tr><td width="25%"><strong>Amount in Words:</strong></td>
+    <td width="75%" id="amountInWords"></td></tr>
+  </table>
+
+  <!-- Payment Details Section -->
+  <table class="payment-table">
+    <tr>
+      <th width="15%" class="center">Sr. No.</th>
+      <th colspan="2" class="center">Payment Details</th>
+      <!-- Signature in Receipt Panel -->
+      <th width="25%" rowspan="5" class="signature-section">
+        <br><br>
+        <img id="signatureImg" alt="Signature">
+        <br>Signature<br>(Secretary / Chairman / Treasurer)
+      </th>
+    </tr>
+    <tr><td class="center">1</td><td colspan="2" id="paymentDetail1"></td></tr>
+    <tr><td class="center">2</td><td colspan="2" id="paymentDetail2"></td></tr>
+    <tr><td class="center">3</td><td colspan="2" id="paymentDetail3"></td></tr>
+    <tr><td class="center">4</td><td colspan="2" id="paymentDetail4"></td></tr>
+  </table>
+
+  <!-- Notes Section -->
+  <table>
+    <tr><td class="bold">Note:</td></tr>
+    <tr>
+      <td>
+        <ol class="notes">
+          <li id="note1"></li>
+          <li id="note2"></li>
+          <li id="note3"></li>
+        </ol>
+      </td>
+    </tr>
+  </table>
+</div>
+<div id="allReceipts" style="display: none;"></div>
+
+   <!--Bottom Controls-->
+  <div class="bottom-controls no-print">
+  <div class="text-center mt-4">
+  <button id="prev" class="btn-arr" style="display: none;" onclick="nxtprv(nxt = false, prev = true)" ><i class='fas fa-chevron-circle-left' style='font-size:24px'></i></button>
+  <button class="btn-print" id="print" onclick="window.print()"><i class='fas fa-print'></i>  Print Receipt</button>
+  <button class="btn-print" id="print-all" style="display: none;" onclick="printAll_recs()"><i class='fas fa-print'></i>  Print all Receipts</button>
+  <button class="btn-toggle" id="config" onclick="toggleConfig()"><i class='fas fa-cog'></i>  Configure Settings</button>
+  <button id="next" class="btn-arr" style="display: none;" onclick="nxtprv(nxt = true)"><i class='fas fa-chevron-circle-right' style='font-size:24px'></i></button>
+  </div>
+  </div>
+
+
+
+
+<script>
+let count = 0;
+let max_count;
+
+function renderRecrows(Data){
+  const trows = document.querySelector('#charges-table');
+  let extra_charges = Data.additional_charges;
+  let extra_chargesKeys = new Set(Object.keys(extra_charges));
+  trows.innerHTML = `
+    <tr><th colspan="3" class="center">Maintenance Charges</th></tr>
+    <tr><th colspan="3" class="center" id="periodHeader">PERIOD: </th></tr>
+    <tr><th class="center">Sr. No.</th><th class="center">Description</th><th class="center">Amount</th></tr>
+    <tr><td class="center">1</td><td>Periodic Building Maintenance</td><td class="right" id="pbm">0.00</td></tr>
+    <tr><td class="center">2</td><td>Repair & Maintenance Fund</td><td class="right" id="rmf">0.00</td></tr>
+    <tr><td class="center">3</td><td>Sinking Funds</td><td class="right" id="sinking">0.00</td></tr>
+  `;
+  let sr = 4;
+  // Add dynamic extra charge headers
+  extra_chargesKeys.forEach(chargeName => {
+      trows.innerHTML += `
+      <tr><td class="center">${sr}</td><td>${chargeName}</td><td class="right" id="${chargeName}">0.00</td></tr>`;
+      sr += 1
+  });
+
+  // Action col
+  trows.innerHTML += `
+    <tr><td class="center">${sr}</td><td>Parking</td><td class="right" id="parking">0.00</td></tr>
+    <tr><td class="center">${sr+1}</td><td>Penalty/Interest</td><td class="right" id="penalty">0.00</td></tr>
+    <tr><td class="center">${sr+2}</td><td>Lease Rent</td><td class="right" id="leaseRent">0.00</td></tr>
+    <tr><td class="center">${sr+3}</td><td>Previous Balance</td><td class="right" id="balance">0.00</td></tr>
+    <tr><td colspan="3"></td></tr>
+    <tr><td colspan="2" class="bold">GRAND TOTAL</td><td class="right bold" id="grandTotal">0.00</td></tr>
+      `;
+}
+
+function returnDetails(){
+  const urlParams = new URLSearchParams(window.location.search);
+  const dataParam = urlParams.get('data');
+  if (!dataParam) return [];
+
+  try {
+    return JSON.parse(decodeURIComponent(dataParam));
+  } catch (e) {
+    console.error("Invalid data parameter:", e);
+    return [];
+  }
+}
+
+function loadDetails(pay = null){
+  const invoice = document.getElementById('invoice-container');
+
+  loadConfig();
+  if(!pay){
+    const receiptDataList = returnDetails();
+    if(!receiptDataList) return;
+    max_count = receiptDataList.length;
+
+    const receiptData = (max_count > 0)? receiptDataList[count]: receiptDataList;
+    if(receiptData){
+      invoice.style.display = "block" ;
+      toggleArrbtn();
+      renderRecrows(receiptData);
+      fillDetails(receiptData);
+    }
+    return max_count;
+  }
+  else if(pay){
+    const receiptData = pay;
+    if(receiptData){
+      renderRecrows(receiptData);
+      fillDetails(receiptData);
+      const clone = invoice.cloneNode(true);
+
+      return clone;
+    }
+  }
+  }
+
+function fillDetails(recDat){
+  let additional_charges = recDat.additional_charges;
+  Object.entries(additional_charges).map(([k, v])=>{
+    document.getElementById(`${k}`).textContent = formatCurrency(v);
+  });
+  document.getElementById('ownerName').textContent = recDat.owners;
+  document.getElementById('invoiceNo').textContent = recDat.id;
+  document.getElementById('flatNo').textContent = recDat.room_no;
+  document.getElementById('receiptDate').textContent = formatDate(recDat.date_made);
+  document.getElementById('monthsCovered').textContent = recDat.months;
+  document.getElementById('periodHeader').textContent = 'PERIOD: ' + recDat.period;
+  document.getElementById('pbm').textContent = formatCurrency(recDat.periodic_building_maintenance);
+  document.getElementById('rmf').textContent = formatCurrency(recDat.repair_and_maintenance_fund);
+  document.getElementById('sinking').textContent = formatCurrency(recDat.sinking_funds);
+  document.getElementById('parking').textContent = formatCurrency(recDat.parking);
+  document.getElementById('penalty').textContent = formatCurrency(recDat.penalty);
+  document.getElementById('leaseRent').textContent = formatCurrency(recDat.lease_rent);
+  document.getElementById('balance').textContent = formatCurrency(recDat.balance);
+  document.getElementById('grandTotal').textContent = formatCurrency(recDat.total_maintenance_amount);
+  const totalAmount = Math.round(parseFloat(recDat.payment_amount));
+  document.getElementById('amountInWords').textContent = numberToWords(totalAmount)+' Rupees Only';
+  document.getElementById('paymentDetail1').textContent = `Payment Mode: ${recDat.payment_mode}`;
+  document.getElementById('paymentDetail2').textContent = `Payment Date: ${formatDate(recDat.payment_date)}`;
+  if(recDat.payment_mode==='CHEQUE'){
+    document.getElementById('paymentDetail3').textContent = `Cheque No: ${recDat.cheque_num}`;
+    document.getElementById('paymentDetail4').textContent = `Cheque Draw Date: ${formatDate(recDat.cheque_draw_date)}`;
+  }
+  else{
+    document.getElementById('paymentDetail3').textContent = ` `;
+    document.getElementById('paymentDetail4').textContent = ` `;
+  }
+}
+
+function printAll_recs() {
+  const container = document.getElementById('allReceipts');
+  const template = document.getElementById('invoice-container');
+  const payments = returnDetails();
+
+  // Clear any existing content
+  container.innerHTML = '';
+  container.style.display = "block"
+
+  payments.forEach((p, idx) => {
+    template.style.display = "block";
+    const inv = loadDetails(p);
+    template.style.display = "none"
+    container.appendChild(inv);
+
+
+    if (idx < payments.length - 1) {
+      const pageBreak = document.createElement('div');
+      pageBreak.style.pageBreakAfter = 'always';
+      container.appendChild(pageBreak);
+    }
+  });
+
+  window.print();
+  container.style.display = "none"
+  template.style.display = "block"
+}
+
+// Toggle config panel
+function toggleConfig() {
+  const panel = document.getElementById('configPanel');
+  panel.classList.toggle('open');
+  }
+
+function toggleArrbtn() {
+  const nxtBtn = document.getElementById('next');
+  const prvBtn = document.getElementById('prev');
+  if (!nxtBtn || !prvBtn) return;
+  nxtBtn.style.display = (max_count > 0) ? "block" : "none";
+  prvBtn.style.display = (max_count > 0) ? "block" : "none";
+}
+
+function nxtprv(nxt=false, prev=false){
+  const nxtBtn = document.getElementById('next');
+  const prvBtn = document.getElementById('prev');
+    if(nxt){
+      if (count < (max_count-1)){
+        prvBtn.disabled = false;
+        count += 1;
+        loadDetails(pay=null);
+      } else if(count === (max_count-1) ){nxtBtn.disabled = true;}
+
+    }
+    else if(prev){
+      if(count !== 0){
+        nxtBtn.disabled = false;
+        count -= 1;
+        loadDetails(pay=null);
+      }else{prvBtn.disabled = true;}
+    }
+}
+
+
+// Load config
+function loadConfig() {
+  const cfg = JSON.parse(localStorage.getItem('receiptConfig')) || {};
+  document.getElementById('cfgSociety').value = cfg.society||'';
+  document.getElementById('cfgAddress').value = cfg.address||'';
+  document.getElementById('cfgRegNo').value = cfg.regno||'';
+  document.getElementById('cfgPAN').value = cfg.pan||'';
+  document.getElementById('cfgNote1').value = cfg.note1||'';
+  document.getElementById('cfgNote2').value = cfg.note2||'';
+  document.getElementById('cfgNote3').value = cfg.note3||'';
+  if(cfg.signature) document.getElementById('signatureImg').src = cfg.signature;
+  applyConfig(cfg);
+}
+
+// Save config
+function saveConfig() {
+  const fileInput = document.getElementById('cfgSignature');
+  const cfg = {
+    society: document.getElementById('cfgSociety').value,
+    address: document.getElementById('cfgAddress').value,
+    regno: document.getElementById('cfgRegNo').value,
+    pan: document.getElementById('cfgPAN').value,
+    note1: document.getElementById('cfgNote1').value,
+    note2: document.getElementById('cfgNote2').value,
+    note3: document.getElementById('cfgNote3').value
+  };
+  // Handle image
+  if(fileInput.files.length>0) {
+    const file=fileInput.files[0];
+    if(file.size>150*1024) { alert("File too large!"); return; }
+    const reader=new FileReader();
+    reader.onload=function(e){
+      cfg.signature=e.target.result;
+      localStorage.setItem('receiptConfig',JSON.stringify(cfg));
+      applyConfig(cfg);
+      alert("Config saved!");
+    };
+    reader.readAsDataURL(file);
+  } else {
+    const existing = JSON.parse(localStorage.getItem('receiptConfig'))||{};
+    if(existing.signature) cfg.signature=existing.signature;
+    localStorage.setItem('receiptConfig',JSON.stringify(cfg));
+    applyConfig(cfg);
+    alert("Config saved!");
+  }
+}
+
+function applyConfig(cfg){
+  document.getElementById('societyName').textContent = cfg.society || 'SOCIETY';
+  document.getElementById('societyAddress').textContent = 'Address: ' + (cfg.address || '');
+  document.getElementById('societyRegNo').textContent = 'Registration No: ' + (cfg.regno || '');
+  document.getElementById('societyPAN').textContent = 'PAN Number: ' + (cfg.pan || '');
+  document.getElementById('note1').textContent = cfg.note1 || 'Cheque should be drawn in favor of society only.';
+  document.getElementById('note2').textContent = cfg.note2 || 'Cheque Subject to Realisation.';
+  document.getElementById('note3').textContent = cfg.note3 || 'Interest @ 10% of defaulted amount will be charged for delayed payments.';
+
+  if(cfg.signature) document.getElementById('signatureImg').src = cfg.signature;
+  }
+
+  // Remove signature from config
+  function removeSignature() {
+  const cfg = JSON.parse(localStorage.getItem('receiptConfig')) || {};
+  delete cfg.signature; // remove the saved signature
+  localStorage.setItem('receiptConfig', JSON.stringify(cfg));
+  document.getElementById('cfgSignature').value = ""; // clear file input
+  document.getElementById('signatureImg').src = "";   // remove image from receipt
+  alert("Signature removed!");
+  }
+
+  // === Receipt Data Handling (unchanged) ===
+  function numberToWords(num) {
+    const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine'];
+    const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    const teens=['Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    if(num===0) return 'Zero';
+    function convertHundreds(n){
+      let res='';
+      if(n>=100){res=ones[Math.floor(n/100)]+' Hundred ';n%=100;}
+      if(n>=20){res+=tens[Math.floor(n/10)]+' ';n%=10;}
+      else if(n>=10){res+=teens[n-10]+' ';n=0;}
+      if(n>0) res+=ones[n]+' ';
+      return res.trim();
+    }
+    if(num<1000) return convertHundreds(num);
+    let res='';let crore=Math.floor(num/10000000);num%=10000000;
+    let lakh=Math.floor(num/100000);num%=100000;
+    let thousand=Math.floor(num/1000);num%=1000;
+    if(crore>0)res+=convertHundreds(crore)+' Crore ';
+    if(lakh>0)res+=convertHundreds(lakh)+' Lakh ';
+    if(thousand>0)res+=convertHundreds(thousand)+' Thousand ';
+    if(num>0)res+=convertHundreds(num);
+    return res.trim();
+  }
+  function formatCurrency(amount){return parseFloat(amount).toFixed(2);}
+  function formatDate(dateString){const d=new Date(dateString);return d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');}
+
+  document.addEventListener('DOMContentLoaded', ()=>{loadDetails(pay = null);});
+  document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const printallbtn = document.getElementById('print-all');
+  if (params.get('autoPrint') === 'true') {
+    printallbtn.style.display = "block";
+     setTimeout(()=>{
+              printAll_recs();
+            }, 500);
+  }
+  else if(params.get('viewAll') === 'true'){printallbtn.style.display = "block";}
+});
+</script>
+</body>
+</html>
