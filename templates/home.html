@@ -17,10 +17,10 @@
 <div id="app" class="container">
   <!-- Navigation Tabs -->
   <ul class="nav nav-tabs mb-4">
-    <li class="nav-item"><a class="nav-link" href="#charges">Spacewise Charges</a></li>
-    <li class="nav-item"><a class="nav-link" href="#maintenance">Maintenance Data</a></li>
-    <li class="nav-item"><a class="nav-link" href="#payments">Record Payments</a></li>
-    <li class="nav-item"><a class="nav-link" href="#payment-records">View Records</a></li>
+    <li class="nav-item"><a class="nav-link" id="chargestab" href="#charges">Spacewise Charges</a></li>
+    <li class="nav-item"><a class="nav-link" id="maintenancetab" href="#maintenance">Maintenance Data</a></li>
+    <li class="nav-item"><a class="nav-link" id="paymentstab" href="#payments">Record Payments</a></li>
+    <li class="nav-item"><a class="nav-link" id="payrectab" href="#payment-records">View Records</a></li>
     <!-- <li class="nav-item ms-auto">
     <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm">Toggle Dark Mode</button>
     </li> -->
@@ -30,36 +30,29 @@
   </ul>
 
   <!-- Charges Page -->
-  <div id="page-charges" style="display:none">
+ <div id="page-charges" style="display:none">
     <p class="text-muted">Define standard maintenance charges for each space type.</p>
     <div class="d-flex justify-content-between mb-3">
       <button type="button" class="btn btn-success" id="addChargesRowBtn">
         <i class="fas fa-plus"></i> Add New Space Type
       </button>
       <div class="status-container">
-        <div class="spinner-border text-primary loading-spinner" role="status" id="loadingSpinner">
+        <div class="spinner-border text-primary loading-spinner" role="status" id="loadingSpinnerCharges">
           <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="status-message mb-0" id="responseMessage">Load data or add a new space type.</p>
+        <p class="status-message mb-0" id="responseMessageCharges">Load data or add a new space type.</p>
       </div>
       <button type="button" class="btn btn-primary" id="refreshChargesBtn"><i class="fas fa-sync-alt"></i></button>
     </div>
     <div class="table-container mb-3">
       <table class="table table-bordered" id="spacewiseChargesTable">
-        <thead>
-          <tr>
-            <th>Space Type</th>
-            <th>PBM</th>
-            <th>RMF</th>
-            <th>Sinking Funds</th>
-            <th>Parking (JSON)</th>
-            <th>Lease Rent</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+        <thead> <tr></tr> </thead>
         <tbody></tbody>
       </table>
     </div>
+     <button id="charges-bulkDeleteBtn" class="btn btn-danger btn-lg">
+        <i class="fas fa-trash"></i> Delete Selected
+    </button>
   </div>
 
   <!-- Maintenance Page -->
@@ -88,10 +81,10 @@
                     <i class="fas fa-plus"></i>
                 </button>
                 <div class="status-container">
-                    <div class="spinner-border text-primary loading-spinner" role="status" id="loadingSpinner">
+                    <div class="spinner-border text-primary loading-spinner" role="status" id="loadingSpinnerMaint">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p class="status-message mb-0" id="responseMessage">Load data or add a new room entry.</p>
+                    <p class="status-message mb-0" id="responseMessageMaint">Load data or add a new room entry.</p>
                 </div>
                 <button type="button" class="btn btn-primary" id="refreshMaintBtn" aria-label="Refresh Data">
                     <i class="fas fa-sync-alt"></i>
@@ -100,31 +93,14 @@
 
             <div class="table-container mb-3">
                 <table class="table table-bordered" id="roomMaintenanceTable">
-                    <thead>
-                        <tr>
-                            <th>Room No.</th>
-                            <th>Owners</th>
-                            <th>Space Type</th>
-                            <th>PBM</th>
-                            <th>RMF</th>
-                            <th>Sinking Funds</th>
-                            <th>Num Vehicles</th>
-                            <th>Parking</th>
-                            <th>Lease Rent</th>
-                            <th>Apply Lease Rent?</th>
-                            <th>Penalty</th>
-                            <th>Balance</th>
-                            <th>Total</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        </tbody>
+                    <thead><tr></tr></thead>
+                    <tbody></tbody>
                 </table>
             </div>
+              <button id="bulkDeleteBtn" class="btn btn-danger btn-lg">
+                <i class="fas fa-trash"></i> Delete Selected
+            </button>
         </div>
-    <!-- </div>
-  </div> -->
 
   <!-- Payments Page -->
   <div id="page-payments" style="display:none">
@@ -135,10 +111,10 @@
                 <i class="fas fa-plus"></i>
             </button>
             <div class="status-container">
-                <div class="spinner-border text-primary loading-spinner" role="status" id="loadingSpinner">
+                <div class="spinner-border text-primary loading-spinner" role="status" id="loadingSpinnerPaylog">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="status-message mb-0" id="responseMessage">Ready to log payments.</p>
+                <p class="status-message mb-0" id="responseMessagePaylog">Ready to log payments.</p>
             </div>
             <button type="button" class="btn btn-primary" id="logAllPaymentsBtn" aria-label="Log All Payments">
                 <i class="fas fa-save"></i>
@@ -148,29 +124,7 @@
         <div class="log-table-container mb-3">
             <table class="log-table table-bordered" id="paymentsLogTable">
                 <thead>
-                    <tr>
-                        <th>Room No</th>
-                        <th>Owners</th>
-                        <th>Date Made</th>
-                        <th>Months</th>
-                        <th>Period Covered</th>
-                        <th>Space</th>
-                        <th>PBM</th>
-                        <th>RMF</th>
-                        <th>Sinking Funds</th>
-                        <th>Parking</th>
-                        <th>Penalty</th>
-                        <th>Lease Rent</th>
-                        <th>Balance</th>
-                        <th>Total Due</th>
-                        <th>Payment Amount</th>
-                        <th>Payment Date</th>
-                        <th>Payment Mode</th>
-                        <th>Cheque Number</th>
-                        <th>Cheque Draw Date</th>
-                        <!-- <th>Description</th> -->
-                        <th>Action</th>
-                    </tr>
+                    <tr></tr>
                 </thead>
                 <tbody>
                     <!-- Payment rows will be added dynamically by JavaScript -->
@@ -182,8 +136,10 @@
             <div class="card-header">Activity Log</div>
             <div class="card-body maintenance-log-area" id="maintenanceLogArea">Ready for logging.</div>
         </div>
+        <button id="paylog-bulkDeleteBtn" class="btn btn-danger btn-lg">
+            <i class="fas fa-trash"></i> Delete Selected
+        </button>
     </div>
-  <!-- </div> -->
 
   <!-- View Payment Records -->
   <div id="page-payment-records" style="display:none">
@@ -192,12 +148,13 @@
         <!-- Left side: List of payments -->
         <div class="list-container">
             <div class="list-header">
+                <input type="checkbox" id="selectAllPayrecCheckbox">
                 <h5 class="mb-0">Payment Records</h5>
                 <button type="button" class="btn btn-sm btn-refresh" id="refreshPayrecBtn">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
-            
+
             <!-- Filter Section -->
             <div class="filter-card">
                 <div class="filter-header" onclick="toggleFilters()">
@@ -210,22 +167,22 @@
                     <div class="filter-items">
                         <div class="filter-item">
                             <label class="filter-label">Room No</label>
-                            <input type="text" class="form-control form-control-sm" id="filterRoomNo" 
+                            <input type="text" class="form-control form-control-sm" id="filterRoomNo"
                                 placeholder="Room number" oninput="filterPayments()">
                         </div>
                         <div class="filter-item">
                             <label class="filter-label">Owner</label>
-                            <input type="text" class="form-control form-control-sm" id="filterOwner" 
+                            <input type="text" class="form-control form-control-sm" id="filterOwner"
                                 placeholder="Owner name" oninput="filterPayments()">
                         </div>
                         <div class="filter-item">
                             <label class="filter-label">Payment Date</label>
-                            <input type="date" class="form-control form-control-sm" id="filterPaymentDate" 
+                            <input type="date" class="form-control form-control-sm" id="filterPaymentDate"
                                 onchange="filterPayments()">
                         </div>
                         <div class="filter-item">
                             <label class="filter-label">Payment Mode</label>
-                            <select class="form-control form-control-sm" id="filterPaymentMode" 
+                            <select class="form-control form-control-sm" id="filterPaymentMode"
                                     onchange="filterPayments()">
                                 <option value="">All Modes</option>
                                 <option value="CASH">Cash</option>
@@ -237,12 +194,12 @@
                         </div>
                         <div class="filter-item">
                             <label class="filter-label">Period</label>
-                            <input type="text" class="form-control form-control-sm" id="filterPeriod" 
+                            <input type="text" class="form-control form-control-sm" id="filterPeriod"
                                 placeholder="e.g. Apr-Jun 2024" oninput="filterPayments()">
                         </div>
                         <div class="filter-item">
                             <label class="filter-label">Receipt Date</label>
-                            <input type="date" class="form-control form-control-sm" id="filterDateMade" 
+                            <input type="date" class="form-control form-control-sm" id="filterDateMade"
                                 onchange="filterPayments()">
                         </div>
                     </div>
@@ -276,11 +233,15 @@
             </div>
         </div>
     </div>
+    <div class="payrec-controls">
+    <button id="payrec-bulkDeleteBtn" class="btn btn-danger btn-lg">
+            <i class="fas fa-trash"></i> Delete Selected
+    </button>
+    <button id="payrec-printAll" class="btn-print"> <i class="fas fa-print"></i> Print All</button>
+    <button id="payrec-viewAll" class="btn-viewall"> <i class="fas fa-file-invoice"></i> View All</button>
+    </div>
 </div>
   </div>
-  <!-- <div id="rectemp-charges" style="display:none">
-
-  </div> -->
 
 </div>
 
